@@ -2,108 +2,72 @@ import React, { useRef } from 'react';
 import { Form } from '@formio/react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-
-interface FormComponent {
-  type: string;
-  key: string;
-  label?: string;
-  input?: boolean;
-  inputClass?: string;
-  placeholder?: string;
-  validate?: { required?: boolean, pattern?: string, customMessage?: string };
-  conditional?: { show?: boolean, when?: string, eq?: string };
-  data?: { values?: { label: string, value: string }[] };
-}
-
-const formDefinition: { type: string; display: string; components: FormComponent[] } = {
+const formDefinition = {
   type: "form",
   display: "form",
   components: [
     {
-      type: "textfield",
-      key: "firstName",
-      label: "First Name",
-      input: true,
-      inputClass: "form-control",
-      placeholder: "Enter your first name",
-      validate: {
-        required: true,
-        customMessage: "First Name is required",
-      }
+      type: "columns",
+      columns: [
+        {
+          components: [
+            {
+              type: "textfield",
+              key: "firstName",
+              label: "First Name",
+              input: true,
+              placeholder: "Enter your first name",
+              inputClass: "form-control",
+            },
+            {
+              type: "email",
+              key: "email",
+              label: "Email",
+              input: true,
+              placeholder: "Enter your email address",
+              inputClass: "form-control",
+            }
+          ]
+        },
+        {
+          components: [
+            {
+              type: "textfield",
+              key: "lastName",
+              label: "Last Name",
+              input: true,
+              placeholder: "Enter your last name",
+              inputClass: "form-control",
+            },
+            {
+              type: "textfield",
+              key: "phoneNumber",
+              label: "Phone Number",
+              input: true,
+              placeholder: "Enter your phone number",
+              inputClass: "form-control",
+            }
+          ]
+        }
+      ]
     },
     {
-      type: "textfield",
-      key: "lastName",
-      label: "Last Name",
+      type: "survey",
+      key: "survey",
+      label: "Survey",
       input: true,
-      inputClass: "form-control",
-      placeholder: "Enter your last name",
-      validate: {
-        required: true,
-        customMessage: "Last Name is required",
-      }
-    },
-    {
-      type: "email",
-      key: "email",
-      label: "Email",
-      input: true,
-      inputClass: "form-control",
-      placeholder: "Enter your email",
-      validate: {
-        required: true,
-        pattern: "^\\S+@\\S+$",
-        customMessage: "Invalid email address",
-      }
-    },
-    {
-      type: "select",
-      key: "country",
-      label: "Country",
-      input: true,
-      inputClass: "form-control",
-      data: {
-        values: [
-          { label: "United States", value: "us" },
-          { label: "Canada", value: "ca" },
-          { label: "Other", value: "other" }
-        ]
-      },
-      placeholder: "Select your country"
-    },
-    {
-      type: "textfield",
-      key: "state",
-      label: "State",
-      input: true,
-      inputClass: "form-control",
-      placeholder: "Enter your state",
-      conditional: {
-        show: true,
-        when: "country",
-        eq: "us",
-      }
-    },
-    {
-      type: "textfield",
-      key: "province",
-      label: "Province",
-      input: true,
-      inputClass: "form-control",
-      placeholder: "Enter your province",
-      conditional: {
-        show: true,
-        when: "country",
-        eq: "ca",
-      }
-    },
-    {
-      type: "textarea",
-      key: "comments",
-      label: "Comments",
-      input: true,
-      inputClass: "form-control",
-      placeholder: "Enter any additional comments",
+      questions: [
+        { value: "howWouldYouRateTheFormIoPlatform", label: "How would you rate the Form.io platform?" },
+        { value: "howWasCustomerSupport", label: "How was Customer Support?" },
+        { value: "overallExperience", label: "Overall Experience?" }
+      ],
+      values: [
+        { value: "excellent", label: "Excellent" },
+        { value: "great", label: "Great" },
+        { value: "good", label: "Good" },
+        { value: "average", label: "Average" },
+        { value: "poor", label: "Poor" }
+      ]
     },
     {
       type: "button",
@@ -127,6 +91,11 @@ const FormComponent: React.FC = () => {
     formInstance.current = instance;
   };
 
+  // Ajoutez une fonction pour gérer la soumission du formulaire dans l inspection 
+  const handleSubmit = (submission: any) => {
+    console.log('Form submitted with data:', submission.data);
+  };
+
   const handleClick = () => {
     if (!formInstance.current) {
       console.log("Our form isn't quite ready yet.");
@@ -135,12 +104,17 @@ const FormComponent: React.FC = () => {
     formInstance.current.getComponent('firstName')?.setValue('John');
     formInstance.current.getComponent('lastName')?.setValue('Doe');
     formInstance.current.getComponent('email')?.setValue('john.doe@example.com');
+    formInstance.current.getComponent('phoneNumber')?.setValue('97000000');
   };
 
   return (
     <div className="container-fluid d-flex justify-content-center align-items-center vh-100">
       <div className="p-4 border rounded shadow-sm bg-light" style={{ width: '100%', maxWidth: '500px' }}>
-        <Form form={formDefinition} formReady={handleFormReady} />
+        <Form 
+          form={formDefinition} 
+          formReady={handleFormReady} 
+          onSubmit={handleSubmit} // Ajoutez l'événement onSubmit ici
+        />
         <button type="button" className="btn btn-primary mt-3 w-100" onClick={handleClick}>Set Default Values</button>
       </div>
     </div>
