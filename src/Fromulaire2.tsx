@@ -1,104 +1,224 @@
 import React, { useRef } from 'react';
-import { Form } from '@formio/react';
+import { Form} from '@formio/react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 
-interface FormComponent {
-  type: string;
-  key: string;
-  label?: string;
-  input?: boolean;
-  inputClass?: string;
-  placeholder?: string;
-  validate?: { required?: boolean, pattern?: string, customMessage?: string };
-  conditional?: { show?: boolean, when?: string, eq?: string };
-  data?: { values?: { label: string, value: string }[] };
-}
 
-const formDefinition: { type: string; display: string; components: FormComponent[] } = {
+
+const formDefinition = {
   type: "form",
   display: "form",
+ 
   components: [
     {
-      type: "textfield",
-      key: "firstName",
-      label: "First Name",
-      input: true,
-      inputClass: "form-control",
-      placeholder: "Enter your first name",
-      validate: {
-        required: true,
-        customMessage: "First Name is required",
-      }
-    },
-    {
-      type: "textfield",
-      key: "lastName",
-      label: "Last Name",
-      input: true,
-      inputClass: "form-control",
-      placeholder: "Enter your last name",
-      validate: {
-        required: true,
-        customMessage: "Last Name is required",
-      }
-    },
-    {
-      type: "email",
-      key: "email",
-      label: "Email",
-      input: true,
-      inputClass: "form-control",
-      placeholder: "Enter your email",
-      validate: {
-        required: true,
-        pattern: "^\\S+@\\S+$",
-        customMessage: "Invalid email address",
-      }
-    },
-  
-    {
-      type: "textfield",
-      key: "province",
-      label: "Province",
-      input: true,
-      inputClass: "form-control",
-      placeholder: "Enter your province",
-      conditional: {
-        show: true,
-        when: "country",
-        eq: "ca",
-      }
+      type: "columns",
+      columns: [
+        {
+          components: [
+           
+            {
+              type: "email",
+              key: "email",
+              label: "Email",
+              input: true,
+              placeholder: "Enter your email address",
+              inputClass: "form-control",
+            }
+          ]
+        },
+        {
+          components: [
+           
+            {
+              type: "textfield",
+              key: "phoneNumber",
+              label: "Phone Number",
+              input: true,
+              placeholder: "Enter your phone number",
+              inputClass: "form-control",
+            },
+            
+            
+          ]
+        }
+      ]
     },
     {
       type: "textarea",
-      key: "comments",
-      label: "Comments",
+      key: "description",
+      label: "Description",
       input: true,
+      placeholder: "Enter your description",
       inputClass: "form-control",
-      placeholder: "Enter any additional comments",
     },
     {
-      type: "button",
-      key: "submit",
-      label: "Submit",
+      type: "file",
+      key: "fileUpload",
+      label: "Upload File",
+      input: true, 
+      inputClass: "form-control", 
+      storage: "base64", 
+      url: "https://your-upload-url.com", 
+      filePattern: "application/pdf", 
+      fileMinSize: "0KB", 
+      fileMaxSize: "10MB", 
+      
+    },
+    
+    {
+      type: "survey",
+      key: "survey",
+      label: "Survey",
       input: true,
-      inputClass: "btn btn-primary",
-    }
+      questions: [
+        { value: "howWouldYouRateTheFormIoPlatform", label: "How would you rate the Form.io platform?" },
+        { value: "howWasCustomerSupport", label: "How was Customer Support?" },
+        
+      ],
+      values: [
+        { value: "excellent", label: "Excellent" },
+        { value: "great", label: "Great" },
+        { value: "good", label: "Good" },
+        { value: "average", label: "Average" },
+        
+      ]
+    },
+    
+    {
+        label: 'Children',
+        key: 'children',
+        type: 'datagrid',
+        input: true,
+        validate: {
+          minLength: 1,
+          maxLength: 6
+        },
+        components: [
+          {
+            label: 'First Name',
+            key: 'firstName',
+            type: 'textfield',
+            input: true
+          },
+          {
+            label: 'Last Name',
+            key: 'lastName',
+            type: 'textfield',
+            input: true
+          },
+          // {
+          //   label: 'Gender',
+          //   key: 'gender',
+          //   type: 'select',
+          //   input: true,
+          //   data: {
+          //     values: [
+          //       {
+          //         value: 'male',
+          //         label: 'Male'
+          //       },
+          //       {
+          //         value: 'female',
+          //         label: 'Female'
+          //       },
+          //       {
+          //         value: 'other',
+          //         label: 'Other'
+          //       }
+          //     ]
+          //   },
+          //   dataSrc: 'values',
+          //   template: '<span>{{ item.label }}</span>'
+          // },
+          {
+            type: 'checkbox',
+            label: 'Dependant',
+            key: 'dependant',
+            inputType: 'checkbox',
+            input: true
+          },
+          {
+            label: 'Birthdate',
+            key: 'birthdate',
+            type: 'datetime',
+            input: true,
+            format: 'yyyy-MM-dd hh:mm a',
+            enableDate: true,
+            enableTime: true,
+            defaultDate: '',
+            datepickerMode: 'day',
+            datePicker: {
+              showWeeks: true,
+              startingDay: 0,
+              initDate: '',
+              minMode: 'day',
+              maxMode: 'year',
+              yearRows: 4,
+              yearColumns: 5,
+              datepickerMode: 'day'
+            },
+            timePicker: {
+              hourStep: 1,
+              minuteStep: 1,
+              showMeridian: true,
+              readonlyInput: false,
+              mousewheel: true,
+              arrowkeys: true
+            },
+            "conditional": {
+              "eq": "true",
+              "when": "dependant",
+              "show": "true"
+            }
+          }
+        ]
+      },
+      {
+        type: "button",
+        key: "submit",
+        label: "Submit",
+        input: true,
+        inputClass: "custom-button ",
+        customClass: "custom-inline-styles",
+
+      },
   ]
 };
 
-// Définir un type pour l'instance du formulaire
+
+
+
 interface FormioInstance {
   getComponent: (key: string) => { setValue: (value: string) => void } | undefined;
+  
 }
 
 const FormComponent: React.FC = () => {
   const formInstance = useRef<FormioInstance | null>(null);
+ 
 
   const handleFormReady = (instance: FormioInstance) => {
     formInstance.current = instance;
   };
+
+  // Ajoutez une fonction pour gérer la soumission du formulaire dans l inspection 
+  const handleSubmit = (submission: any) => {
+    console.log('Form submitted with data:', submission.data);
+    // const childrenComponent = formInstance.current?.getComponent('children');
+    // if (childrenComponent) {
+    //   childrenComponent.setValue([]);
+    // }
+    formInstance.current?.getComponent('firstName')?.setValue('');
+    formInstance.current?.getComponent('lastName')?.setValue('');
+    formInstance.current?.getComponent('email')?.setValue('');
+    formInstance.current?.getComponent('phoneNumber')?.setValue('');
+    formInstance.current?.getComponent('description')?.setValue('');
+    
+      
+   
+  };
+
+    
 
   const handleClick = () => {
     if (!formInstance.current) {
@@ -108,16 +228,28 @@ const FormComponent: React.FC = () => {
     formInstance.current.getComponent('firstName')?.setValue('John');
     formInstance.current.getComponent('lastName')?.setValue('Doe');
     formInstance.current.getComponent('email')?.setValue('john.doe@example.com');
+    formInstance.current.getComponent('phoneNumber')?.setValue('97000000');
+    formInstance.current.getComponent('description')?.setValue('bonjour john doe');
   };
 
+
+  const onChange = (data: any) => {
+      console.log('onChange ', data)
+  }
   return (
-    <div className="container-fluid d-flex justify-content-center align-items-center vh-100">
-      <div className="p-4 border rounded shadow-sm bg-light" style={{ width: '100%', maxWidth: '500px' }}>
-        <Form form={formDefinition} formReady={handleFormReady} />
-        <button type="button" className="btn btn-primary mt-3 w-100" onClick={handleClick}>Set Default Values</button>
+    <div className="container-fluid d-flex justify-content-center align-items-center ">
+      <div className="p-4 border rounded shadow-sm bg-light"  >
+        <Form 
+          form={formDefinition} 
+          formReady={handleFormReady} 
+          onSubmit={handleSubmit} 
+          onChange={(changedData: any) => onChange(changedData)}
+        />
+        <button type="button" className="custom-button " onClick={handleClick}>Set Default Values</button>
       </div>
     </div>
   );
 };
 
 export default FormComponent;
+

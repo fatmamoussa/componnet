@@ -12,14 +12,6 @@ const formDefinition = {
         {
           components: [
             {
-              type: "textfield",
-              key: "firstName",
-              label: "First Name",
-              input: true,
-              placeholder: "Enter your first name",
-              inputClass: "form-control",
-            },
-            {
               type: "email",
               key: "email",
               label: "Email",
@@ -33,23 +25,37 @@ const formDefinition = {
           components: [
             {
               type: "textfield",
-              key: "lastName",
-              label: "Last Name",
-              input: true,
-              placeholder: "Enter your last name",
-              inputClass: "form-control",
-            },
-            {
-              type: "textfield",
               key: "phoneNumber",
               label: "Phone Number",
               input: true,
               placeholder: "Enter your phone number",
               inputClass: "form-control",
+              validate: {
+                pattern: "^[0-9]{8}$",
+                customMessage: "Please enter a valid phone number containing only digits."
+              },
+              inputType: 'text'
             }
+            
+            
+            
+            
           ]
         }
       ]
+    },
+    {
+      type: "textarea",
+      key: "description",
+      label: "Description",
+      input: true,
+      placeholder: "Enter your description",
+      inputClass: "form-control",
+      rows: 2, 
+      validate: {
+        maxLength: 20,
+        customMessage: "Description must be no more than 20 characters long."
+      }
     },
     {
       type: "survey",
@@ -59,29 +65,102 @@ const formDefinition = {
       questions: [
         { value: "howWouldYouRateTheFormIoPlatform", label: "How would you rate the Form.io platform?" },
         { value: "howWasCustomerSupport", label: "How was Customer Support?" },
-        { value: "overallExperience", label: "Overall Experience?" }
       ],
       values: [
         { value: "excellent", label: "Excellent" },
         { value: "great", label: "Great" },
         { value: "good", label: "Good" },
         { value: "average", label: "Average" },
-        { value: "poor", label: "Poor" }
       ]
     },
+    {
+      label: 'Children',
+      key: 'children',
+      type: 'datagrid',
+      input: true,
+      validate: {
+        minLength: 1,
+        maxLength: 6
+      },
+      components: [
+        {
+          label: 'First Name',
+          key: 'firstName',
+          type: 'textfield',
+          input: true,
+          validate: {
+            pattern: "^[A-Za-z]+$", 
+            customMessage: "Please enter a valid last name with alphabetic characters only."
+          }
+        },
+        {
+          label: 'Last Name',
+          key: 'lastName',
+          type: 'textfield',
+          input: true,
+          validate: {
+            pattern: "^[A-Za-z]+$", 
+            customMessage: "Please enter a valid last name with alphabetic characters only."
+          }
+        
+        },
+        {
+          type: 'checkbox',
+          label: 'Dependant',
+          key: 'dependant',
+          inputType: 'checkbox',
+          input: true
+        },
+        {
+          label: 'Birthdate',
+          key: 'birthdate',
+          type: 'datetime',
+          input: true,
+          format: 'yyyy-MM-dd hh:mm a',
+          enableDate: true,
+          enableTime: true,
+          defaultDate: '',
+          datepickerMode: 'day',
+          datePicker: {
+            showWeeks: true,
+            startingDay: 0,
+            initDate: '',
+            minMode: 'day',
+            maxMode: 'year',
+            yearRows: 4,
+            yearColumns: 5,
+            datepickerMode: 'day'
+          },
+          timePicker: {
+            hourStep: 1,
+            minuteStep: 1,
+            showMeridian: true,
+            readonlyInput: false,
+            mousewheel: true,
+            arrowkeys: true
+          },
+          "conditional": {
+            "eq": "true",
+            "when": "dependant",
+            "show": "true"
+          }
+        }
+      ]
+    },
+    
     {
       type: "button",
       key: "submit",
       label: "Submit",
       input: true,
-      inputClass: "btn btn-primary",
-    }
+      inputClass: "custom-button ",
+      customClass: "custom-inline-styles",
+    },
   ]
 };
 
-// Définir un type pour l'instance du formulaire
 interface FormioInstance {
-  getComponent: (key: string) => { setValue: (value: string) => void } | undefined;
+  getComponent: (key: string) => { setValue: (value: any) => void } | undefined;
 }
 
 const FormComponent: React.FC = () => {
@@ -91,9 +170,24 @@ const FormComponent: React.FC = () => {
     formInstance.current = instance;
   };
 
-  // Ajoutez une fonction pour gérer la soumission du formulaire dans l inspection 
   const handleSubmit = (submission: any) => {
     console.log('Form submitted with data:', submission.data);
+    const childrenComponent = formInstance.current?.getComponent('children');
+    if (childrenComponent) {
+      (childrenComponent as any).setValue([]);
+    }
+    const surveyComponent = formInstance.current?.getComponent('survey');
+    if (surveyComponent) {
+      (surveyComponent as any).setValue({
+        howWouldYouRateTheFormIoPlatform: '', // Reset values
+        howWasCustomerSupport: '' // Reset values
+      });
+    }
+    formInstance.current?.getComponent('firstName')?.setValue('');
+    formInstance.current?.getComponent('lastName')?.setValue('');
+    formInstance.current?.getComponent('email')?.setValue('');
+    formInstance.current?.getComponent('phoneNumber')?.setValue('');
+    formInstance.current?.getComponent('description')?.setValue('');
   };
 
   const handleClick = () => {
@@ -101,21 +195,48 @@ const FormComponent: React.FC = () => {
       console.log("Our form isn't quite ready yet.");
       return;
     }
-    formInstance.current.getComponent('firstName')?.setValue('John');
-    formInstance.current.getComponent('lastName')?.setValue('Doe');
+
     formInstance.current.getComponent('email')?.setValue('john.doe@example.com');
     formInstance.current.getComponent('phoneNumber')?.setValue('97000000');
+    formInstance.current.getComponent('description')?.setValue('bonjour john doe');
+
+    // Set default value for survey (radio buttons)
+    const surveyComponent = formInstance.current.getComponent('survey');
+    if (surveyComponent) {
+      (surveyComponent as any).setValue({
+        howWouldYouRateTheFormIoPlatform: 'excellent', // Set to one of the values
+        howWasCustomerSupport: 'good' // Set to one of the values
+      });
+    }
+
+    // Set default value for datagrid
+    const childrenComponent = formInstance.current.getComponent('children');
+    if (childrenComponent) {
+      (childrenComponent as any).setValue([
+        {
+          firstName: 'Jane',
+          lastName: 'Doe',
+          dependant: true,
+          birthdate: '2000-01-01T00:00:00Z'
+        }
+      ]);
+    }
+  };
+
+  const onChange = (data: any) => {
+    console.log('onChange ', data);
   };
 
   return (
-    <div className="container-fluid d-flex justify-content-center align-items-center vh-100">
-      <div className="p-4 border rounded shadow-sm bg-light" style={{ width: '100%', maxWidth: '500px' }}>
+    <div className="container-fluid d-flex justify-content-center align-items-center">
+      <div className="p-4 border rounded shadow-sm bg-light">
         <Form 
           form={formDefinition} 
           formReady={handleFormReady} 
-          onSubmit={handleSubmit} // Ajoutez l'événement onSubmit ici
+          onSubmit={handleSubmit} 
+          onChange={(changedData: any) => onChange(changedData)}
         />
-        <button type="button" className="btn btn-primary mt-3 w-100" onClick={handleClick}>Set Default Values</button>
+        <button type="button" className="custom-button" onClick={handleClick}>Set Default Values</button>
       </div>
     </div>
   );
