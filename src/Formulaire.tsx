@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Form } from '@formio/react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -36,10 +36,6 @@ const formDefinition = {
               },
               inputType: 'text'
             }
-            
-            
-            
-            
           ]
         }
       ]
@@ -51,12 +47,18 @@ const formDefinition = {
       input: true,
       placeholder: "Enter your description",
       inputClass: "form-control",
-      rows: 2, 
+      rows: 2,
       validate: {
-        maxLength: 20,
-        customMessage: "Description must be no more than 20 characters long."
+        // required: {
+        //   message: "Description is required." 
+        // },
+        maxLength: {
+          value: 20, 
+          message: "Description must be no more than 20 characters long." 
+        }
       }
     },
+    
     {
       type: "survey",
       key: "survey",
@@ -88,9 +90,14 @@ const formDefinition = {
           key: 'firstName',
           type: 'textfield',
           input: true,
+          inputClass: "form-control",
           validate: {
-            pattern: "^[A-Za-z]+$", 
-            customMessage: "Please enter a valid last name with alphabetic characters only."
+           
+            pattern: {
+              
+              value: "^[A-Za-z]+$", 
+              message: "Please enter a valid last name with alphabetic characters only."
+            }
           }
         },
         {
@@ -98,12 +105,17 @@ const formDefinition = {
           key: 'lastName',
           type: 'textfield',
           input: true,
+          inputClass: "form-control",
           validate: {
-            pattern: "^[A-Za-z]+$", 
-            customMessage: "Please enter a valid last name with alphabetic characters only."
+           
+            pattern: {
+              
+              value: "^[A-Za-z]+$", 
+              message: "Please enter a valid last name with alphabetic characters only."
+            }
           }
-        
         },
+        
         {
           type: 'checkbox',
           label: 'Dependant',
@@ -139,15 +151,14 @@ const formDefinition = {
             mousewheel: true,
             arrowkeys: true
           },
-          "conditional": {
-            "eq": "true",
-            "when": "dependant",
-            "show": "true"
+          conditional: {
+            eq: 'true',
+            when: 'dependant',
+            show: 'true'
           }
         }
       ]
     },
-    
     {
       type: "button",
       key: "submit",
@@ -165,13 +176,47 @@ interface FormioInstance {
 
 const FormComponent: React.FC = () => {
   const formInstance = useRef<FormioInstance | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleFormReady = (instance: FormioInstance) => {
     formInstance.current = instance;
   };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      // You can handle the selected file here if needed
+    }
+  };
+
+  const validateAge = (birthDate: Date): boolean => {
+    const minAge = 16;
+    const maxAge = 70;
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= minAge && age <= maxAge;
+  };
+
   const handleSubmit = (submission: any) => {
     console.log('Form submitted with data:', submission.data);
+
+    // Validation des âges pour les enfants
+    const children = submission.data.children || [];
+    for (const child of children) {
+      if (child.birthdate) {
+        const birthDate = new Date(child.birthdate);
+        if (!validateAge(birthDate)) {
+          alert('All children must be between 16 and 70 years old.');
+          return; // Empêcher la soumission si l'âge est invalide
+        }
+      }
+    }
+
+    // Réinitialiser les valeurs des composants
     const childrenComponent = formInstance.current?.getComponent('children');
     if (childrenComponent) {
       (childrenComponent as any).setValue([]);
@@ -179,8 +224,8 @@ const FormComponent: React.FC = () => {
     const surveyComponent = formInstance.current?.getComponent('survey');
     if (surveyComponent) {
       (surveyComponent as any).setValue({
-        howWouldYouRateTheFormIoPlatform: '', // Reset values
-        howWasCustomerSupport: '' // Reset values
+        howWouldYouRateTheFormIoPlatform: '', // Réinitialiser les valeurs
+        howWasCustomerSupport: '' // Réinitialiser les valeurs
       });
     }
     formInstance.current?.getComponent('firstName')?.setValue('');
@@ -188,6 +233,12 @@ const FormComponent: React.FC = () => {
     formInstance.current?.getComponent('email')?.setValue('');
     formInstance.current?.getComponent('phoneNumber')?.setValue('');
     formInstance.current?.getComponent('description')?.setValue('');
+
+    // Réinitialiser le champ de fichier
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setSuccessMessage('Form submitted successfully!')
   };
 
   const handleClick = () => {
@@ -230,6 +281,11 @@ const FormComponent: React.FC = () => {
   return (
     <div className="container-fluid d-flex justify-content-center align-items-center">
       <div className="p-4 border rounded shadow-sm bg-light">
+        <input
+          type="file"
+          onChange={handleFileChange}
+          ref={fileInputRef} // Attach the ref to the file input
+        />
         <Form 
           form={formDefinition} 
           formReady={handleFormReady} 
@@ -237,6 +293,7 @@ const FormComponent: React.FC = () => {
           onChange={(changedData: any) => onChange(changedData)}
         />
         <button type="button" className="custom-button" onClick={handleClick}>Set Default Values</button>
+        {successMessage && <div className="alert alert-success mt-3">{successMessage}</div>}
       </div>
     </div>
   );
