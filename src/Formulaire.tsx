@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { Form } from '@formio/react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useNavigate } from 'react-router-dom';
+
 
 const formDefinition = {
   type: "form",
@@ -47,18 +49,13 @@ const formDefinition = {
       input: true,
       placeholder: "Enter your description",
       inputClass: "form-control",
-      rows: 2,
+      rows: 3,
       validate: {
-        // required: {
-        //   message: "Description is required." 
-        // },
-        maxLength: {
-          value: 20, 
-          message: "Description must be no more than 20 characters long." 
-        }
+        required: {
+          message: "Description is required"
+        },
       }
     },
-    
     {
       type: "survey",
       key: "survey",
@@ -92,12 +89,8 @@ const formDefinition = {
           input: true,
           inputClass: "form-control",
           validate: {
-           
-            pattern: {
-              
-              value: "^[A-Za-z]+$", 
-              message: "Please enter a valid last name with alphabetic characters only."
-            }
+            value: "^[A-Za-z]+$", 
+            message: "Please enter a valid first name with alphabetic characters only."
           }
         },
         {
@@ -107,15 +100,10 @@ const formDefinition = {
           input: true,
           inputClass: "form-control",
           validate: {
-           
-            pattern: {
-              
-              value: "^[A-Za-z]+$", 
-              message: "Please enter a valid last name with alphabetic characters only."
-            }
+            value: "^[A-Za-z]+$", 
+            message: "Please enter a valid last name with alphabetic characters only."
           }
         },
-        
         {
           type: 'checkbox',
           label: 'Dependant',
@@ -178,9 +166,14 @@ const FormComponent: React.FC = () => {
   const formInstance = useRef<FormioInstance | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const navigate = useNavigate(); 
 
   const handleFormReady = (instance: FormioInstance) => {
     formInstance.current = instance;
+  };
+
+  const validateDescriptionLength = (description: string): boolean => {
+    return description.length <= 20;
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -204,19 +197,27 @@ const FormComponent: React.FC = () => {
   const handleSubmit = (submission: any) => {
     console.log('Form submitted with data:', submission.data);
 
-    // Validation des âges pour les enfants
+   
     const children = submission.data.children || [];
     for (const child of children) {
       if (child.birthdate) {
         const birthDate = new Date(child.birthdate);
         if (!validateAge(birthDate)) {
           alert('All children must be between 16 and 70 years old.');
-          return; // Empêcher la soumission si l'âge est invalide
+          return; 
         }
       }
+      navigate('/Formul'); 
     }
 
-    // Réinitialiser les valeurs des composants
+   
+    const description = submission.data.description || '';
+    if (!validateDescriptionLength(description)) {
+      alert('Description must be no more than 20 characters long.');
+      return; 
+    }
+
+    
     const childrenComponent = formInstance.current?.getComponent('children');
     if (childrenComponent) {
       (childrenComponent as any).setValue([]);
@@ -224,8 +225,8 @@ const FormComponent: React.FC = () => {
     const surveyComponent = formInstance.current?.getComponent('survey');
     if (surveyComponent) {
       (surveyComponent as any).setValue({
-        howWouldYouRateTheFormIoPlatform: '', // Réinitialiser les valeurs
-        howWasCustomerSupport: '' // Réinitialiser les valeurs
+        howWouldYouRateTheFormIoPlatform: '', 
+        howWasCustomerSupport: '' 
       });
     }
     formInstance.current?.getComponent('firstName')?.setValue('');
@@ -234,11 +235,16 @@ const FormComponent: React.FC = () => {
     formInstance.current?.getComponent('phoneNumber')?.setValue('');
     formInstance.current?.getComponent('description')?.setValue('');
 
-    // Réinitialiser le champ de fichier
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    setSuccessMessage('Form submitted successfully!')
+
+    
+    setSuccessMessage('Form successfully submitted!');
+    setTimeout(() => {
+      setSuccessMessage(null);
+    }, 3000); // Message disparaît après 1 secondes
   };
 
   const handleClick = () => {
@@ -251,16 +257,16 @@ const FormComponent: React.FC = () => {
     formInstance.current.getComponent('phoneNumber')?.setValue('97000000');
     formInstance.current.getComponent('description')?.setValue('bonjour john doe');
 
-    // Set default value for survey (radio buttons)
+    
     const surveyComponent = formInstance.current.getComponent('survey');
     if (surveyComponent) {
       (surveyComponent as any).setValue({
-        howWouldYouRateTheFormIoPlatform: 'excellent', // Set to one of the values
-        howWasCustomerSupport: 'good' // Set to one of the values
+        howWouldYouRateTheFormIoPlatform: 'excellent', 
+        howWasCustomerSupport: 'good' 
       });
     }
 
-    // Set default value for datagrid
+    
     const childrenComponent = formInstance.current.getComponent('children');
     if (childrenComponent) {
       (childrenComponent as any).setValue([
@@ -293,7 +299,11 @@ const FormComponent: React.FC = () => {
           onChange={(changedData: any) => onChange(changedData)}
         />
         <button type="button" className="custom-button" onClick={handleClick}>Set Default Values</button>
-        {successMessage && <div className="alert alert-success mt-3">{successMessage}</div>}
+        {successMessage && (
+          <div className="alert alert-success mt-3">
+            {successMessage}
+          </div>
+        )}
       </div>
     </div>
   );
